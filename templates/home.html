@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+
+{% block content %}
+  <div class="card">
+    <h1>🌍 Multi-Criteria Groundwater Potential Mapping System</h1>
+    <p class="lead">A decision-support system for identifying groundwater potential areas in Zimbabwe.</p>
+
+    <p>The system combines:</p>
+    <ul>
+      <li><strong>BGS Africa Groundwater Atlas</strong> — regional hydrogeological context (CC BY-SA 4.0)</li>
+      <li><strong>Boruta feature selection</strong> — choose the predictors that actually carry signal</li>
+      <li><strong>Support Vector Machine</strong> — binary classifier (Low / High potential)</li>
+      <li><strong>Total Confidence Score (TCS)</strong> — four-component score out of 10 capturing how much we trust the prediction</li>
+      <li><strong>Land Use Pressure modifier</strong> — adjusts the prediction based on the surveyor's land-use checklist</li>
+      <li><strong>BGS regional-baseline cross-check</strong> — automatic disagreement flag against published yield classes</li>
+      <li><strong>Expert review queue</strong> — surfaces predictions that need human judgment before development decisions</li>
+    </ul>
+
+    <p>Designed for <strong>real-world deployment</strong>, with full audit trail per prediction.</p>
+
+    <hr>
+    <p class="muted">
+      Developed by <strong>Sustainability Lab</strong>
+      &nbsp;·&nbsp;
+      <a href="mailto:pascal@sustainabilitylab.africa">pascal@sustainabilitylab.africa</a>
+                          &nbsp;·&nbsp;
+          <a href="mailto:pascalm83@gmail.com">pascalm83@gmail.com</a>
+    </p>
+  </div>
+{% endblock %}

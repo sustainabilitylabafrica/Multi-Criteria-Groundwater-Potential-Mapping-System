@@ -1,0 +1,70 @@
+{% extends "base.html" %}
+
+{% block title %}Model Info — Groundwater Potential Mapping System{% endblock %}
+
+{% block content %}
+  <div class="card">
+    <h1>🧠 Model Information</h1>
+
+    <h2>Trained classifier</h2>
+    <table class="kv">
+      <tr><td>Model</td>             <td>Support Vector Machine (binary)</td></tr>
+      <tr><td>Output classes</td>    <td>Low Potential Area · High Potential Area</td></tr>
+      <tr><td>Feature selection</td> <td>Boruta</td></tr>
+      <tr><td>Encoding</td>          <td>OrdinalEncoder for ordered features (Elevation, Drainage, etc.) + OneHotEncoder for unordered (Soil Type, Geology)</td></tr>
+      <tr><td>Scaling</td>           <td>StandardScaler</td></tr>
+    </table>
+
+    <h2 style="margin-top: 1.5rem;">Selected predictors</h2>
+    {% if selected_features %}
+      <ul>
+        {% for f in selected_features %}
+          <li>{{ pretty_predictor(f) }} <span class="muted" style="font-size: 0.85rem;">(<code>{{ f }}</code>)</span></li>
+        {% endfor %}
+      </ul>
+    {% else %}
+      <div class="alert error">Selected feature list is not available. Check <code>selected_features.pkl</code>.</div>
+    {% endif %}
+  </div>
+
+  <div class="card">
+    <h2>📚 Source data</h2>
+    <p>
+      The system uses the <strong>BGS Africa Groundwater Atlas</strong>
+      (Zimbabwe extract, 1:5,000,000) as its hydrogeological reference.
+      Every GPS point is spatial-joined against this shapefile to derive
+      the geology class and the BGS regional baseline yield.
+    </p>
+    <p class="muted" style="font-size: 0.9rem;">
+      See <a href="{{ url_for('data_sources_page') }}">Data Sources</a>
+      for full attribution, licence, and the loaded dataset status.
+    </p>
+  </div>
+
+  <div class="card">
+    <h2>Post-prediction processing</h2>
+    <p>Once the SVM produces its raw class, the system runs three more passes before reporting:</p>
+    <ol>
+      <li><strong>BGS regional baseline cross-check</strong> — compare the SVM's binary class to the BGS Africa Groundwater Atlas baseline yield class for the polygon at the GPS point. Disagreement is treated as a sign that more on-the-ground information (e.g. electromagnetic surveys) is needed, not as a hard error.</li>
+      <li><strong>Total Confidence Score (TCS)</strong> — sum of four components out of 10:
+        <ul>
+          <li><em>C1 (3)</em> — data completeness: how many of the 6 predictors were directly observed vs inferred</li>
+          <li><em>C2 (3)</em> — geology match quality: confidence of the BGS-class to model-class remapping</li>
+          <li><em>C3 (2)</em> — biophysical indicator convergence: how many supplementary observations support the prediction</li>
+          <li><em>C4 (2)</em> — BGS baseline alignment: 2 if model and BGS agree, 1 if neither agrees nor disagrees, 0 if they conflict</li>
+        </ul>
+      </li>
+      <li><strong>Land Use Pressure (LUPS) modifier</strong> — the surveyor's land-use checklist sums to a single integer. Moderate pressure (LUPS −1 to −2) reduces TCS by 1; severe pressure (LUPS ≤ −3) reduces TCS by 2 and downgrades a High prediction to Low.</li>
+    </ol>
+
+    <p>If any of these conditions fire, the prediction is added to the
+       <a href="{{ url_for('expert_review_page') }}">Expert Review queue</a>:</p>
+    <ul>
+      <li>Adjusted TCS &lt; 5</li>
+      <li>Severe land-use pressure (LUPS ≤ −3)</li>
+      <li>Geology remapped with Low confidence</li>
+      <li>No supplementary indicators support the prediction</li>
+      <li>BGS baseline differs from the model</li>
+    </ul>
+  </div>
+{% endblock %}

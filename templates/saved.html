@@ -1,0 +1,110 @@
+{% extends "base.html" %}
+
+{% block title %}Saved Locations — Groundwater Potential Mapping System{% endblock %}
+
+{% block content %}
+
+  <div class="card">
+    <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 1rem; flex-wrap: wrap;">
+      <div>
+        <h1>💾 Saved Locations</h1>
+        <p class="lead">All saved site surveys — newest first.</p>
+      </div>
+      <div class="btn-row">
+        <a href="/api/saved.geojson" class="btn btn-secondary" download>⬇ Export GeoJSON</a>
+        <button id="btn-history" class="btn">📅 History Report</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    {% if not rows %}
+      <p class="muted">
+        No saved surveys yet. Go to the <a href="{{ url_for('predict_page') }}">Predict</a>
+        page, complete a survey end-to-end, and save it from the bottom of the page.
+      </p>
+    {% else %}
+      <table class="saved-table">
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>Date (CAT)</th>
+            <th>Label</th>
+            <th>Location</th>
+            <th>Prediction</th>
+            <th>Confidence</th>
+            <th>TCS</th>
+            <th>Review</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for r in rows %}
+            <tr data-id="{{ r.id }}">
+              <td>{{ r.id }}</td>
+              <td>{{ r.created_at[:16].replace('T', ' ') }}</td>
+              <td>{{ r.label or '—' }}</td>
+              <td class="mono">{{ '%.5f'|format(r.latitude) }}, {{ '%.5f'|format(r.longitude) }}</td>
+              <td>
+                {% if 'High' in (r.prediction or '') %}
+                  <span class="pill pill-good">{{ r.prediction }}</span>
+                {% elif 'Low' in (r.prediction or '') %}
+                  <span class="pill pill-bad">{{ r.prediction }}</span>
+                {% else %}
+                  <span class="muted">—</span>
+                {% endif %}
+              </td>
+              <td>
+                {% if r.high_pct is not none %}
+                  {{ '%.1f'|format(r.high_pct) }}%
+                {% else %}
+                  <span class="muted">—</span>
+                {% endif %}
+              </td>
+              <td class="tcs-cell">
+                {% if r.tcs is not none %}{{ r.tcs }}/10{% else %}—{% endif %}
+              </td>
+              <td>
+                {% if r.needs_review %}
+                  <span class="review-flag">⚠ needs review</span>
+                {% else %}
+                  <span class="muted">—</span>
+                {% endif %}
+              </td>
+              <td class="row-actions">
+                <a href="{{ url_for('site_survey_report', loc_id=r.id) }}"
+                   class="btn btn-secondary btn-sm">📄 Report</a>
+                <button class="btn btn-danger btn-sm btn-delete" data-id="{{ r.id }}">🗑</button>
+              </td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    {% endif %}
+  </div>
+
+  <!-- History Report modal -->
+  <div id="history-modal" class="modal-backdrop">
+    <div class="modal-card">
+      <h3>📅 Generate Location History Report</h3>
+      <p class="muted">Pick a date range. The report will include every saved survey within those dates.</p>
+
+      <label for="hist-start">Start date</label>
+      <input type="date" id="hist-start">
+      <label for="hist-end">End date</label>
+      <input type="date" id="hist-end">
+
+      <div id="history-error" class="alert error" style="display:none; margin-top: 0.75rem;"></div>
+
+      <div class="btn-row" style="margin-top: 1rem; justify-content: flex-end;">
+        <button id="btn-history-cancel" class="btn btn-secondary">Cancel</button>
+        <button id="btn-history-go" class="btn">Generate</button>
+      </div>
+    </div>
+  </div>
+
+{% endblock %}
+
+{% block body_extra %}
+  <script src="{{ url_for('static', filename='js/saved.js') }}"></script>
+{% endblock %}

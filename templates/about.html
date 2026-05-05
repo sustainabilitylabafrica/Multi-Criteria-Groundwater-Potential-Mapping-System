@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+
+{% block title %}About — Groundwater Potential Mapping System{% endblock %}
+
+{% block content %}
+  <div class="card">
+    <h1>ℹ️ About</h1>
+    <p>This system was engineered for real-world groundwater
+       decision support in Zimbabwe. It combines field observations,
+       a trained machine-learning classifier, and an authoritative
+       hydrogeological reference dataset.</p>
+
+    <h2 style="margin-top: 1.2rem;">What it does</h2>
+    <ul>
+      <li>Takes a GPS reading from the field</li>
+      <li>Auto-suggests the geological class from the BGS Africa Groundwater Atlas, with optional surveyor override</li>
+      <li>Runs an SVM classifier on the surveyor's six biophysical observations</li>
+      <li>Cross-checks the result against the BGS regional yield baseline</li>
+      <li>Adjusts the prediction for land-use pressure (mining, urban sprawl, beneficial dams, etc.)</li>
+      <li>Computes a Total Confidence Score and routes uncertain predictions to a human-in-the-loop review queue</li>
+      <li>Produces a printable site-survey report and a date-range history report</li>
+      <li>Exports all surveys as GeoJSON for QGIS / ArcGIS analysis</li>
+    </ul>
+
+    <h2 style="margin-top: 1.2rem;">Documentation</h2>
+    <p>For a plain-language explanation of the full prediction
+       algorithm, see <code>PREDICTION_ALGORITHM_GUIDE.md</code>
+       in the project root.</p>
+
+    <hr>
+    <p class="muted">
+      Developed by <strong>Sustainability Lab</strong>
+      &nbsp;·&nbsp;
+      <a href="mailto:pascal@sustainabilitylab.africa">pascal@sustainabilitylab.africa</a>
+          &nbsp;·&nbsp;
+          <a href="mailto:pascalm83@gmail.com">pascalm83@gmail.com</a>
+    </p>
+  </div>
+{% endblock %}

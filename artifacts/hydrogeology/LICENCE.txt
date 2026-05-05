@@ -1,0 +1,34 @@
+Hydrogeological data: Zimbabwe extract from the BGS Africa Groundwater Atlas
+============================================================================
+
+Source : British Geological Survey
+Title  : Africa Groundwater Atlas Country Hydrogeology Maps — Zimbabwe
+Year   : 2019/2021
+Scale  : 1:5,000,000
+Licence: Creative Commons Attribution-ShareAlike 4.0 International (CC BY-SA 4.0)
+URL    : https://www2.bgs.ac.uk/africagroundwateratlas/index.cfm
+
+Citation
+--------
+British Geological Survey. 2019/2021. Africa Groundwater Atlas Country
+Hydrogeology Maps. Africa Groundwater Atlas. Used under CC BY-SA 4.0.
+
+Reference manual
+----------------
+Ó Dochartaigh, B.É. 2021. User Guide Version 1.2: Africa Groundwater Atlas
+Country Hydrogeology Maps. British Geological Survey Open Report OR/21/063.
+https://nora.nerc.ac.uk/id/eprint/531584/
+
+Licence terms (summary)
+-----------------------
+You are free to:
+  * Share — copy and redistribute the material in any medium or format
+  * Adapt — remix, transform, and build upon the material for any purpose
+
+Under the following terms:
+  * Attribution — you must give appropriate credit, provide a link to the
+    licence, and indicate if changes were made.
+  * ShareAlike — if you remix, transform, or build upon the material, you
+    must distribute your contributions under the same licence.
+
+Full licence text: https://creativecommons.org/licenses/by-sa/4.0/

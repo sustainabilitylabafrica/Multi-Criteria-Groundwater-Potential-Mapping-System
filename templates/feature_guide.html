@@ -1,0 +1,53 @@
+{% extends "base.html" %}
+
+{% block title %}Feature Guide — Groundwater Potential Mapping System{% endblock %}
+
+{% block content %}
+  <div class="card">
+    <h1>📘 Feature Guide</h1>
+    <p class="lead">Every feature used by the model and the values it can take, drawn from the training dataset.</p>
+
+    <p class="muted" style="font-size: 0.9rem;">
+      Features are either <strong>ordered</strong> — there's a real progression from
+      one value to the next (Gentle → Moderate → Steep) — or <strong>unordered</strong>,
+      where the values are just categories with no natural ranking.
+      The model handles each kind differently.
+    </p>
+
+    {% if not features %}
+      <div class="alert error">Dataset not available. Check <code>augmented_data.csv</code>.</div>
+    {% else %}
+      {% for name, kind, values in features %}
+        <div class="feature-block">
+          <h3>{{ pretty_predictor(name) }}
+            {% if kind == 'ordered' %}
+              <span class="pill" style="margin-left: 0.5rem; font-size: 0.7rem; vertical-align: middle;">ordered</span>
+            {% else %}
+              <span class="pill" style="margin-left: 0.5rem; font-size: 0.7rem; vertical-align: middle;">unordered</span>
+            {% endif %}
+          </h3>
+
+          {% if values %}
+            <p class="muted">
+              {% if kind == 'ordered' %}
+                Possible values, in order from lowest to highest:
+              {% else %}
+                Possible values:
+              {% endif %}
+            </p>
+            <div class="feature-values">
+              {% for v in values %}
+                <span class="pill">{{ v }}</span>
+                {% if kind == 'ordered' and not loop.last %}
+                  <span class="muted" style="align-self: center;">→</span>
+                {% endif %}
+              {% endfor %}
+            </div>
+          {% else %}
+            <p class="muted">Column not found in loaded dataset, or no values available.</p>
+          {% endif %}
+        </div>
+      {% endfor %}
+    {% endif %}
+  </div>
+{% endblock %}

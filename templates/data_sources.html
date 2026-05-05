@@ -1,0 +1,74 @@
+{% extends "base.html" %}
+
+{% block title %}Data Sources — Groundwater Potential Mapping System{% endblock %}
+
+{% block content %}
+
+  <div class="card">
+    <h1>📚 Data Sources</h1>
+    <p class="lead">
+      The hydrogeological reference data that powers the geology
+      auto-suggestion and BGS regional baseline cross-check.
+    </p>
+  </div>
+
+  <div class="card">
+    <h2>Hydrogeology dataset</h2>
+
+    <table class="kv">
+      <tr><td>Source</td>          <td>British Geological Survey</td></tr>
+      <tr><td>Title</td>           <td>Africa Groundwater Atlas Country Hydrogeology Maps — Zimbabwe</td></tr>
+      <tr><td>Year</td>            <td>2019/2021</td></tr>
+      <tr><td>Scale</td>           <td>1:5,000,000</td></tr>
+      <tr><td>Licence</td>         <td>Creative Commons Attribution-ShareAlike 4.0 (CC BY-SA 4.0)</td></tr>
+      <tr><td>URL</td>             <td><a href="https://www2.bgs.ac.uk/africagroundwateratlas/index.cfm" target="_blank" rel="noopener">www2.bgs.ac.uk/africagroundwateratlas</a></td></tr>
+    </table>
+
+    <h3 style="margin-top: 1rem;">Citation</h3>
+    <p style="background: var(--blue-tint); padding: 0.85rem; border-radius: 8px; border-left: 3px solid var(--blue-bright);">
+      British Geological Survey. 2019/2021. <em>Africa Groundwater Atlas
+      Country Hydrogeology Maps</em>. Africa Groundwater Atlas. Used
+      under CC BY-SA 4.0.
+    </p>
+
+    <h3 style="margin-top: 1rem;">Reference manual</h3>
+    <p>
+      Ó Dochartaigh, B.É. 2021.
+      <em>User Guide Version 1.2: Africa Groundwater Atlas Country
+      Hydrogeology Maps</em>. British Geological Survey Open Report
+      OR/21/063.
+      <a href="https://nora.nerc.ac.uk/id/eprint/531584/" target="_blank" rel="noopener">
+        nora.nerc.ac.uk/id/eprint/531584/</a>
+    </p>
+
+    <h3 style="margin-top: 1rem;">Loaded dataset status</h3>
+    <table class="kv">
+      <tr><td>Loaded?</td>          <td>{{ 'Yes' if hydro_status.ready else 'No' }}</td></tr>
+      <tr><td>File</td>             <td class="mono">{{ hydro_status.path or '—' }}</td></tr>
+      <tr><td>Polygon count</td>    <td>{{ hydro_status.feature_count }}</td></tr>
+      <tr><td>Attribute fields</td> <td class="mono">{{ hydro_status.columns | join(', ') }}</td></tr>
+      <tr><td>BGS schema?</td>      <td>{{ 'Yes' if hydro_status.bgs_schema else 'No (using legacy fallback)' }}</td></tr>
+      {% if hydro_status.error %}
+        <tr><td>Error</td><td style="color: var(--danger);">{{ hydro_status.error }}</td></tr>
+      {% endif %}
+    </table>
+  </div>
+
+  <div class="card">
+    <h2>Important Notes</h2>
+    <ul style="line-height: 1.7;">
+      <li><strong>Zimbabwean scale only.</strong> The dataset is published at 1:5,000,000 — polygon boundaries are accurate to roughly the nearest kilometre, not metre-perfect. A spatial join on a single GPS point returns the regional aquifer character, not a site-specific assessment.</li>
+      <li><strong>Topmost aquifer only.</strong> Deeper aquifers are not represented.</li>
+      <li><strong>No supplementary layers.</strong> The dataset does not contain faults, lineaments, recharge zones, aquifer extents, or borehole points. Phase 6 spatial validation that depends on those layers is currently deferred.</li>
+      <li><strong>Internet Connectivity.</strong> Future versions of application will be able to work offline from a given GPS location</li>
+    
+    </ul>
+    <p class="muted" style="font-size: 0.9rem;">
+      For a site-level assessment, the system uses the BGS data as
+      regional context and relies on the surveyor's biophysical
+      observations (Phase 2 of the decision-making roadmap) for spatial
+      discrimination at sub-polygon scale.
+    </p>
+  </div>
+
+{% endblock %}

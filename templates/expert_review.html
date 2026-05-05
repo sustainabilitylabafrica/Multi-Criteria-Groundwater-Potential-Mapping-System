@@ -1,0 +1,110 @@
+{% extends "base.html" %}
+
+{% block title %}Expert Review, Groundwater Potential Mapping System{% endblock %}
+
+{% block content %}
+
+  <div class="card">
+    <h1>🧐 Expert Review Queue</h1>
+    <p class="lead">
+      Surveys that have triggered one or more expert-review conditions
+      (TCS &lt; 5, severe land-use pressure, low geology confidence, no
+      indicator support, or BGS baseline disagreement).
+    </p>
+  </div>
+
+  <div class="card">
+    {% if not rows %}
+      <p class="muted">
+        Nothing in the review queue. New predictions that trigger review
+        conditions will appear here automatically.
+      </p>
+    {% else %}
+      {% for r in rows %}
+        {% set p = r.prediction or {} %}
+        {% set rev = p.get('expert_review', {}) %}
+        {% set raw = p.get('raw_model', {}) %}
+        {% set mod = p.get('modifier', {}) %}
+        {% set tcs = p.get('tcs', {}) %}
+        <div class="review-card">
+          <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 1rem; flex-wrap: wrap;">
+            <div>
+              <h3 style="margin-bottom: 0.3rem;">
+                Survey #{{ r.id }}
+                {% if r.label %} — {{ r.label }}{% endif %}
+              </h3>
+              <p class="muted" style="font-size: 0.88rem; margin: 0;">
+                {{ r.created_at[:16].replace('T', ' ') }} CAT ·
+                <span class="mono">{{ '%.5f'|format(r.latitude) }}, {{ '%.5f'|format(r.longitude) }}</span>
+              </p>
+            </div>
+            <div style="text-align: right;">
+              <p style="margin: 0;">
+                <strong>{{ r.final_class or raw.get('label', '—') }}</strong>
+              </p>
+              <p class="muted" style="font-size: 0.88rem; margin: 0;">
+                TCS: {{ r.tcs if r.tcs is not none else '—' }}/10
+              </p>
+            </div>
+          </div>
+
+          {% if rev.get('reasons') %}
+            <ul class="review-reasons">
+              {% for reason in rev.reasons %}
+                <li>{{ reason }}</li>
+              {% endfor %}
+            </ul>
+          {% endif %}
+
+          <div class="btn-row">
+            <a href="{{ url_for('site_survey_report', loc_id=r.id) }}"
+               class="btn btn-secondary btn-sm">📄 View full report</a>
+            <button class="btn btn-sm btn-review-decide"
+                    data-id="{{ r.id }}" data-decision="confirmed">✓ Confirm</button>
+            <button class="btn btn-secondary btn-sm btn-review-decide"
+                    data-id="{{ r.id }}" data-decision="overridden">↻ Override</button>
+            <button class="btn btn-secondary btn-sm btn-review-decide"
+                    data-id="{{ r.id }}" data-decision="resurvey">🔁 Resurvey</button>
+            <button class="btn btn-secondary btn-sm btn-review-decide"
+                    data-id="{{ r.id }}" data-decision="geophysics">📡 Geophysics</button>
+          </div>
+        </div>
+      {% endfor %}
+    {% endif %}
+  </div>
+
+  <!-- Decision modal -->
+  <div id="review-modal" class="modal-backdrop">
+    <div class="modal-card">
+      <h3 id="review-modal-title">Record expert decision</h3>
+      <p class="muted" id="review-modal-decision-note"></p>
+
+      <div id="review-override-row" style="display: none;">
+        <label for="review-override-class">Override class</label>
+        <select id="review-override-class">
+          <option value="High Potential Area">High Potential Area</option>
+          <option value="Low Potential Area">Low Potential Area</option>
+        </select>
+      </div>
+
+      <label for="review-rationale">Rationale (required)</label>
+      <textarea id="review-rationale" rows="3"
+                placeholder="State the basis for your decision (field observations, secondary data, etc.)"></textarea>
+
+      <label for="review-reviewer">Reviewer name / initials</label>
+      <input type="text" id="review-reviewer" maxlength="60" placeholder="e.g. P. Mwangi">
+
+      <div id="review-error" class="alert error" style="display:none; margin-top: 0.75rem;"></div>
+
+      <div class="btn-row" style="margin-top: 1rem; justify-content: flex-end;">
+        <button id="review-cancel" class="btn btn-secondary">Cancel</button>
+        <button id="review-submit" class="btn">Submit decision</button>
+      </div>
+    </div>
+  </div>
+
+{% endblock %}
+
+{% block body_extra %}
+  <script src="{{ url_for('static', filename='js/expert_review.js') }}"></script>
+{% endblock %}

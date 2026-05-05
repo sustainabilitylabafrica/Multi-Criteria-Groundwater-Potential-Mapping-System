@@ -1,0 +1,335 @@
+{% extends "base.html" %}
+
+{% block title %}Predict — Groundwater Potential Mapping System{% endblock %}
+
+{% block head_extra %}
+  <link rel="stylesheet"
+        href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+        integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
+        crossorigin="">
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+          integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
+          crossorigin=""></script>
+{% endblock %}
+
+{% block content %}
+
+  <div class="card">
+    <h1>🔮 Predict Groundwater Potential</h1>
+    <p class="lead">
+      Detect your location, review the hydrogeological context, fill in
+      the predictor values, record vegetation, recharge and Land Use
+      observations, then run the prediction and save the full survey.
+    </p>
+    <!-- {% if model_name %}
+      <p class="muted" style="font-size: 0.85rem; margin-top: -0.4rem;">
+        Powered by: <strong>Support Vector Machines</strong> and optimized by <strong>{{ model_name }}</strong> classifier
+      </p>
+    {% endif %} -->
+  </div>
+
+  <!-- ============== 1 · GPS PANEL ============== -->
+  <div class="card">
+    <h2>📍 1 · Detect your location</h2>
+    <div class="btn-row">
+      <button id="btn-detect" class="btn">📍 Detect My Location</button>
+    </div>
+    <div id="gps-status" class="gps-status">Click <em>Detect My Location</em> to begin.</div>
+    <div id="gps-coords" class="gps-coords"></div>
+    <div id="map"></div>
+  </div>
+
+  <!-- ============== 2 · HYDROGEOLOGY CONTEXT ============== -->
+  <div id="hydro-card" class="card" style="display: none;">
+    <h2>🗺️ 2 · Hydrogeological context</h2>
+    <p class="muted" style="font-size: 0.9rem;">
+      Auto-derived from the British Geological Survey (BGS) Africa Groundwater Atlas (1:5M scale).
+      The <strong>hydrogeology class</strong> used by the model is automatically
+      inferred from the polygon at your GPS point, no manual selection
+      is needed.
+    </p>
+    <div id="hydro-body"></div>
+  </div>
+
+  <!-- ============== 3 · PREDICTOR INPUTS ============== -->
+  <div class="card">
+    <h2>🧩 3 · Predictor inputs</h2>
+
+    {% if not ml_ready %}
+      <div class="alert error">
+        Model artifacts are not all loaded. Check the files in <code>artifacts/</code>.
+      </div>
+    {% elif not predictors %}
+      <div class="alert error">
+        No predictor columns found in the dataset.
+      </div>
+    {% else %}
+      <p class="muted">
+        Select values for each predictor. Tick <em>inferred</em> on any
+        value you couldn't directly observe, this lowers data
+        completeness in the confidence score.
+      </p>
+
+      <div id="predictor-grid" class="predictor-grid">
+        {% for feature, options in predictors.items() %}
+          {% set normalised = feature.lower().replace(' ', '').replace('.', '').replace('_', '') %}
+          {% if normalised == 'geologicalfeatures' %}
+            {# Geology is inferred from the map data, not selected by the user.
+               We still need a hidden control so the value flows into the
+               prediction request. The user-facing display will show what
+               was inferred. #}
+            <div id="geology-inferred-card">
+              <label>🪨 {{ pretty_predictor(feature) }} <span class="muted" style="font-weight: normal;">(auto-inferred)</span></label>
+              <div class="inferred-display">
+                <span class="ind-label">From BGS map data</span>
+                <span class="ind-value" id="geology-inferred-value">— pending location detection —</span>
+                <span class="ind-source" id="geology-inferred-source">Detect your location above to populate.</span>
+              </div>
+              <select id="feat-{{ loop.index }}" data-feature="{{ feature }}"
+                      style="display: none;" aria-hidden="true">
+                {% for opt in options %}
+                  <option value="{{ opt }}">{{ opt }}</option>
+                {% endfor %}
+              </select>
+            </div>
+          {% else %}
+            <div>
+              <label for="feat-{{ loop.index }}">🔸 {{ pretty_predictor(feature) }}</label>
+              <select id="feat-{{ loop.index }}" data-feature="{{ feature }}">
+                {% for opt in options %}
+                  <option value="{{ opt }}">{{ opt }}</option>
+                {% endfor %}
+              </select>
+              <label style="font-size: 0.82rem; font-weight: normal; color: var(--text-mute); margin-top: 0.3rem; display: inline-flex; align-items: center; gap: 0.4rem;">
+                <input type="checkbox" data-inferred="{{ feature }}"
+                       style="width: auto;"> inferred (not directly observed)
+              </label>
+            </div>
+          {% endif %}
+        {% endfor %}
+      </div>
+    {% endif %}
+  </div>
+
+  <!-- ============== 4 · VEGETATION & RECHARGE INDICATORS ============== -->
+  <div class="card">
+    <h2>🌱 4 · Vegetation &amp; recharge indicators</h2>
+    <p class="muted">
+      Surface-level indicators that check the model
+      prediction. Each one feeds the <em>indicator convergence</em>
+      component of the confidence score.
+    </p>
+
+    <div class="dropdown-grid">
+      <div>
+        <label for="veg-type">🌿 Vegetation type</label>
+        <select id="veg-type" data-supp-select="vegetation_type">
+          <option value="">— not recorded —</option>
+          <option value="Native">Native</option>
+          <option value="Exotic">Exotic</option>
+          <option value="Mixed">Mixed</option>
+        </select>
+      </div>
+
+      <div>
+        <label for="veg-distribution">📊 Vegetation distribution</label>
+        <select id="veg-distribution" data-supp-select="vegetation_distribution">
+          <option value="">— not recorded —</option>
+          <option value="Sparse">Sparse</option>
+          <option value="Medium">Medium</option>
+          <option value="Dense">Dense</option>
+        </select>
+      </div>
+
+      <div>
+        <label for="veg-cover">🌾 Vegetation cover</label>
+        <select id="veg-cover" data-supp-select="vegetation_cover">
+          <option value="">— not recorded —</option>
+          <option value="Forest">Forest</option>
+          <option value="Grasslands">Grasslands</option>
+          <option value="Shrubs">Shrubs</option>
+          <option value="Wooded Grasslands">Wooded Grasslands</option>
+        </select>
+      </div>
+
+      <div>
+        <label for="recharge">💧 Groundwater recharge evidence</label>
+        <select id="recharge" data-supp-select="groundwater_recharge">
+          <option value="">— not recorded —</option>
+          <option value="Invisible">Invisible</option>
+
+          <option value="Man Made">Man Made</option>
+          <option value="Natural Streams">Natural Streams</option>
+        </select>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============== 5 · SUPPLEMENTARY OBSERVATIONS ============== -->
+  <div class="card">
+    <h2>🌿 5 · Supplementary observations</h2>
+    <p class="muted">
+      Tick every indicator you can verify at the survey point. These
+      support the Confidence Score and inform future model retraining.
+    </p>
+
+    <div class="checklist">
+      
+      <label class="checklist-item">
+        <input type="checkbox" data-supp="indicator_plants">
+        <span><strong>Phreatophyte indicator plants</strong> — Figs (<em>Ficus</em>), Wild Date Palm (<em>Phoenix reclinata</em>), or similar</span>
+      </label>
+      
+      <label class="checklist-item">
+        <input type="checkbox" data-supp="shallow_water_table">
+        <span><strong>Shallow groundwater evidence</strong> — wet patches, hand-dug wells, water-loving herbaceous plants</span>
+      </label>
+    
+      <label class="checklist-item">
+        <input type="checkbox" data-supp="shallow_soil_over_rock">
+        <span><strong>Evidence of fractured underground formations</strong> — productive in basement / fractured igneous environments</span>
+      </label>
+    </div>
+  </div>
+
+  <!-- ============== 6 · SEASONAL GROUNDWATER OBSERVATIONS ============== -->
+  <div class="card">
+    <h2>🗓️ 6 · Seasonal groundwater observations</h2>
+    <p class="muted">
+      Evidence of observed nearby seasonal or perennial groundwater features.
+    </p>
+
+    <div class="checklist">
+      <label class="checklist-item">
+        <input type="checkbox" data-supp="perennial_water_feature">
+        <span><strong>Perennial wetland / deep well / river stream</strong> — water source remains present throughout the year</span>
+      </label>
+      <label class="checklist-item">
+        <input type="checkbox" data-supp="seasonal_water_feature">
+        <span><strong>Seasonal wetland / well / stream</strong> — water source dries out during the dry season</span>
+      </label>
+    </div>
+  </div>
+
+  <!-- ============== 7 · LAND USE PRESSURE ============== -->
+  <div class="card">
+    <h2>🏗️ 7 · Land use and Cover Changes within area</h2>
+    <p class="muted">
+      Each item shifts the Land Use Pressure Score (LUPS). The score is
+      applied as a modifier <em>after</em> the model runs, severe
+      pressure can downgrade a High prediction to Low.
+    </p>
+
+    <div class="checklist">
+      <label class="checklist-item lups-bad">
+        <input type="checkbox" data-lups="active_mining_within_500m">
+        <span>Active hard-rock or large-scale mining within 500 m  <em class="lups-weight">−3</em></span>
+      </label>
+      <label class="checklist-item lups-bad">
+        <input type="checkbox" data-lups="artisanal_mining_or_wetland_drain">
+        <span>Artisanal mining OR wetland drainage / modification  <em class="lups-weight">−2</em></span>
+      </label>
+      <label class="checklist-item lups-bad">
+        <input type="checkbox" data-lups="urban_impervious_over_30pct">
+        <span>Urban / peri-urban development &gt; 30% impervious cover  <em class="lups-weight">−2</em></span>
+      </label>
+      <label class="checklist-item lups-bad">
+        <input type="checkbox" data-lups="urban_impervious_over_30pct">
+        <span>Land Degradation (erosion/gulleys)  <em class="lups-weight">−2</em></span>
+      </label>
+      <label class="checklist-item lups-bad">
+        <input type="checkbox" data-lups="deforestation">
+        <span>Deforestation  <em class="lups-weight">−1</em></span>
+      </label>
+      <label class="checklist-item lups-bad">
+        <input type="checkbox" data-lups="irrigated_ag_borehole_source">
+        <span>Active irrigated agriculture using borehole water  <em class="lups-weight">−1</em></span>
+      </label>
+      <label class="checklist-item lups-good">
+        <input type="checkbox" data-lups="farm_dam_or_weir_within_300m">
+        <span>Active farm dam or small weir within 300 m  <em class="lups-weight">+1</em></span>
+      </label>
+      
+      <label class="checklist-item lups-good">
+        <input type="checkbox" data-lups="farm_dam_or_weir_within_300m">
+        <span>Catchment/watershed management works (Land, Forestry, Soil and Water Conservation. Gulley/erosion control)<em class="lups-weight">+2</em></span>
+      </label>
+    </div>
+
+    <p style="margin-top: 0.8rem;">
+      <strong>Current LUPS:</strong>
+      <span id="lups-display" class="mono">0</span>
+      <span id="lups-level" class="muted" style="margin-left: 0.5rem;">(low)</span>
+    </p>
+  </div>
+
+  <!-- ============== 8 · NOTABLE GEOLOGICAL FEATURES (optional) ============== -->
+  <div class="card">
+    <h2>🪨 8 · Notable Comments <span class="muted" style="font-weight: normal; font-size: 0.95rem;">(optional)</span></h2>
+    <p class="muted">
+      Add a free-form note describing other observations of interest
+    </p>
+
+    <label for="notable-features">Notable Comments</label>
+    <input type="text" id="notable-features" list="notable-features-suggestions"
+           maxlength="300"
+           placeholder="e.g. Valley floor with seasonal river bed">
+    <datalist id="notable-features-suggestions">
+      <option value="Upland">
+      <option value="Lowland">
+      <option value="Valley">
+      <option value="Plateau">
+      <option value="Ridge">
+      <option value="Gentle slope">
+      <option value="Steep escarpment">
+      <option value="Floodplain">
+      <option value="River terrace">
+      <option value="Rocky outcrop">
+    </datalist>
+  </div>
+
+  <!-- ============== 9 · RUN PREDICTION ============== -->
+  <div class="card">
+    <h2>✨ 9 · Run prediction</h2>
+    <div class="btn-row">
+      <button id="btn-predict" class="btn">✨ Run Full Prediction</button>
+    </div>
+    <div id="predict-error" class="alert error" style="display:none;"></div>
+
+    <div id="result" class="result"></div>
+    <div id="result-detail" style="display:none;"></div>
+  </div>
+
+  <!-- ============== 10 · SAVE SITE SURVEY ============== -->
+  <div class="card">
+    <h2>💾 10 · Save site survey</h2>
+    <p class="muted">
+      All four parts must be complete before you can save. Each one ticks
+      green as you do it.
+    </p>
+
+    <ul class="readiness">
+      <li id="ready-gps"><span class="dot"></span> GPS location captured</li>
+      <li id="ready-hydro"><span class="dot"></span> Hydrogeological context loaded</li>
+      <li id="ready-predictors"><span class="dot"></span> Predictor values selected</li>
+      <li id="ready-prediction"><span class="dot"></span> Prediction generated</li>
+    </ul>
+
+    <label for="save-label" style="margin-top: 0.75rem;">Optional label for this survey</label>
+    <input type="text" id="save-label" maxlength="200"
+           placeholder="e.g. Village A">
+
+    <div class="btn-row">
+      <button id="btn-save-survey" class="btn" disabled>💾 Save Site Survey</button>
+    </div>
+
+    <div id="save-toast" class="save-toast"></div>
+  </div>
+
+{% endblock %}
+
+{% block body_extra %}
+  <script src="{{ url_for('static', filename='js/geo.js')     }}"></script>
+  <script src="{{ url_for('static', filename='js/predict.js') }}"></script>
+  <script src="{{ url_for('static', filename='js/save.js')    }}"></script>
+{% endblock %}

@@ -1,0 +1,150 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Location History Report — Groundwater Potential Mapping System</title>
+  {% if not for_pdf %}
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+  {% endif %}
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/report.css') }}">
+</head>
+<body class="report-body">
+
+  {% if not for_pdf %}
+    <div class="report-toolbar no-print">
+      <a href="{{ url_for('saved_page') }}" class="btn btn-secondary">← Back to Saved Locations</a>
+      {% if not error %}
+        <a href="{{ url_for('history_report_pdf', start=start_str, end=end_str) }}"
+           class="btn">⬇ Download PDF</a>
+        <button onclick="window.print()" class="btn btn-secondary">🖨 Print</button>
+      {% endif %}
+    </div>
+  {% endif %}
+
+  <article class="report">
+    <header class="report-head">
+      <div>
+        <p class="report-eyebrow">LOCATION HISTORY REPORT</p>
+        <h1>{{ start_str }} → {{ end_str }}</h1>
+        <p class="report-sub">Groundwater Potential Mapping System</p>
+      </div>
+      <div class="report-meta">
+        <p><strong>Surveys in range</strong><br>{{ count }}</p>
+        <p><strong>Report generated</strong><br>{{ generated_at }}</p>
+      </div>
+    </header>
+
+    <hr>
+
+    {% if error %}
+      <div class="alert error">{{ error }}</div>
+    {% elif count == 0 %}
+      <p class="muted">No saved surveys fall in this date range.</p>
+    {% else %}
+
+      {# Helper to extract the binary final class regardless of which path created the record. #}
+      {% set ns = namespace(high=0, low=0, review=0) %}
+      {% for r in rows %}
+        {% set fc = r.final_class or (r.prediction.modifier.final_label if r.prediction.modifier else r.prediction.raw_model.label if r.prediction.raw_model else r.prediction.label) %}
+        {% if fc and 'High' in fc %}
+          {% set ns.high = ns.high + 1 %}
+        {% else %}
+          {% set ns.low = ns.low + 1 %}
+        {% endif %}
+        {% if r.needs_expert_review %}
+          {% set ns.review = ns.review + 1 %}
+        {% endif %}
+      {% endfor %}
+
+      <section>
+        <h2>Summary</h2>
+        <table class="kv">
+          <tr><td>Total surveys</td>             <td>{{ count }}</td></tr>
+          <tr><td>High Potential predictions</td><td>{{ ns.high }} ({{ '%.0f'|format(100 * ns.high / count) }}%)</td></tr>
+          <tr><td>Low Potential predictions</td> <td>{{ ns.low  }} ({{ '%.0f'|format(100 * ns.low  / count) }}%)</td></tr>
+          <tr><td>Awaiting expert review</td>    <td>{{ ns.review }}</td></tr>
+        </table>
+      </section>
+
+      <section>
+        <h2>Surveys</h2>
+        {% for r in rows %}
+          {% set raw  = r.prediction.raw_model if r.prediction.raw_model else {} %}
+          {% set mod  = r.prediction.modifier  if r.prediction.modifier  else {} %}
+          {% set fc   = r.final_class or mod.final_label or raw.label or '—' %}
+          {% set hp   = raw.high_potential_pct if raw.high_potential_pct is not none else r.prediction.high_potential_pct %}
+          {% set hg   = r.hydrogeology or {} %}
+          <div class="history-entry">
+            <h3>
+              #{{ r.id }} · {{ r.created_at[:16].replace('T', ' ') }} CAT
+              {% if r.label %} · {{ r.label }}{% endif %}
+            </h3>
+            <table class="kv kv-tight">
+              <tr>
+                <td>Location</td>
+                <td class="mono">{{ '%.5f'|format(r.latitude) }}, {{ '%.5f'|format(r.longitude) }}</td>
+              </tr>
+              <tr>
+                <td>Final class</td>
+                <td>
+                  <strong class="{% if 'High' in fc %}good{% else %}bad{% endif %}">
+                    {{ fc }}
+                  </strong>
+                  {% if hp is not none %} · {{ '%.1f'|format(hp) }}% high confidence{% endif %}
+                  {% if r.tcs is not none %} · TCS {{ r.tcs }}/10{% endif %}
+                  {% if r.needs_expert_review %} · <span style="color: var(--danger);">⚠ review</span>{% endif %}
+                </td>
+              </tr>
+              <tr>
+                <td>Hydrogeology</td>
+                <td>
+                  {% if hg.get('raw_glg') %}
+                    {{ hg.raw_glg }}
+                    {% if hg.get('bgs_baseline_yield') %} · BGS yield: {{ hg.bgs_baseline_yield }}{% endif %}
+                    {% if hg.get('model_class') %} · model: {{ hg.model_class }}{% endif %}
+                  {% else %}
+                    <span class="muted">none recorded</span>
+                  {% endif %}
+                </td>
+              </tr>
+              <tr>
+                <td>Observed</td>
+                <td class="muted" style="font-size: 0.9rem;">
+                  {% set vals = r.predictors.get('values', r.predictors) %}
+                  {% for k, v in vals.items() %}
+                    {{ pretty_predictor(k) }}: <strong>{{ v }}</strong>{{ "; " if not loop.last }}
+                  {% endfor %}
+                </td>
+              </tr>
+            </table>
+          </div>
+        {% endfor %}
+      </section>
+
+    {% endif %}
+
+    <hr>
+
+    <footer class="report-foot">
+      <div class="disclaimer">
+        <strong>Recommendation:</strong>
+        Deploy electromagnetic equipment for determining the behaviour and
+        nature of underground fractures and geological resistivity.
+      </div>
+      <p class="muted">
+        This report aggregates saved site surveys within the chosen date
+        range. Each survey's hydrogeology and prediction are snapshots
+        taken at the time of saving and are not refreshed retrospectively.
+        Hydrogeology data sourced from the BGS Africa Groundwater Atlas
+        (CC BY-SA 4.0).
+      </p>
+      <p class="credit">
+        Developed by <strong>Sustainability Lab</strong>
+        &nbsp;·&nbsp;
+        <a href="mailto:pascal@sustainabilitylab.africa">pascal@sustainabilitylab.africa</a>
+      </p>
+    </footer>
+  </article>
+
+</body>
+</html>

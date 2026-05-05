@@ -1,0 +1,680 @@
+/* ============================================================================
+   Groundwater Potential Mapping System — stylesheet
+   Soothing Blue + Light Gray theme — designed around the app's water-mapping
+   focus. Calm, professional, easy on the eyes during long survey sessions.
+   ============================================================================ */
+
+/* ---------- Design tokens (single place to change colours/spacing) -------- */
+:root {
+  /* Surfaces */
+  --bg-base:        #f3f6fa;   /* page background — very light cool gray */
+  --bg-card:        #ffffff;   /* cards */
+  --bg-card-2:      #f7fafd;   /* card secondary surface */
+  --bg-sidebar:     #eef3f8;   /* sidebar background */
+
+  /* Brand blues */
+  --blue:           #2f6ea8;   /* primary blue */
+  --blue-bright:    #3f88c8;   /* hover/highlight blue */
+  --blue-deep:      #1f4f7a;   /* deeper blue for headings */
+  --blue-soft:      rgba(63, 136, 200, 0.18);   /* borders */
+  --blue-glow:      rgba(63, 136, 200, 0.28);   /* shadows */
+  --blue-tint:      rgba(63, 136, 200, 0.06);   /* subtle fill */
+
+  /* Text */
+  --text:           #1f2a35;   /* main body text — dark slate */
+  --text-mute:      #5b6a78;   /* muted gray */
+  --text-on-blue:   #ffffff;
+
+  /* Accents */
+  --danger:         #b94a48;   /* used sparingly — only for true errors */
+  --warning:        #c98a2e;   /* amber, for soft caution */
+  --success:        #3a8b54;   /* calm green */
+
+  /* Layout */
+  --radius:         12px;
+  --radius-lg:      16px;
+  --gap:            1.25rem;
+}
+
+/* ---------- Reset-ish ---------------------------------------------------- */
+* { box-sizing: border-box; }
+html, body {
+  margin: 0;
+  padding: 0;
+  background: var(--bg-base);
+  color: var(--text);
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  font-size: 16px;
+  line-height: 1.55;
+}
+
+/* ---------- Layout: sidebar + main --------------------------------------- */
+.layout {
+  display: grid;
+  grid-template-columns: 240px 1fr;
+  min-height: 100vh;
+}
+
+.sidebar {
+  background: linear-gradient(180deg, var(--bg-sidebar), #e4ecf3);
+  border-right: 1px solid var(--blue-soft);
+  padding: 2rem 1.25rem;
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  overflow-y: auto;
+}
+
+.sidebar h2 {
+  font-size: 1.1rem;
+  letter-spacing: 1px;
+  margin: 0 0 1.5rem 0;
+  color: var(--blue-deep);
+  text-transform: uppercase;
+  font-weight: 800;
+}
+
+.sidebar nav { display: flex; flex-direction: column; gap: 0.4rem; }
+
+.sidebar nav a {
+  display: flex; align-items: center; gap: 0.65rem;
+  padding: 0.65rem 0.9rem;
+  border-radius: 10px;
+  color: var(--text-mute);
+  text-decoration: none;
+  font-weight: 600;
+  font-size: 0.95rem;
+  border: 1px solid transparent;
+  transition: all 0.15s ease;
+}
+.sidebar nav a:hover {
+  color: var(--blue-deep);
+  background: rgba(63, 136, 200, 0.08);
+  border-color: var(--blue-soft);
+}
+.sidebar nav a.active {
+  color: var(--text-on-blue);
+  background: linear-gradient(90deg, var(--blue), var(--blue-bright));
+  border-color: var(--blue);
+  box-shadow: 0 2px 10px var(--blue-glow);
+}
+
+.main {
+  padding: 2rem 2.5rem 4rem 2.5rem;
+  max-width: 1200px;
+}
+
+/* ---------- Card -------------------------------------------------------- */
+.card {
+  background: var(--bg-card);
+  border: 1px solid var(--blue-soft);
+  border-radius: var(--radius-lg);
+  padding: 1.75rem;
+  margin-bottom: var(--gap);
+  box-shadow: 0 2px 12px rgba(31, 79, 122, 0.06);
+}
+
+h1, h2, h3, h4 {
+  color: var(--blue-deep);
+  font-weight: 800;
+  letter-spacing: 0.3px;
+  margin-top: 0;
+}
+h1 { font-size: 1.85rem; margin-bottom: 0.75rem; }
+h2 { font-size: 1.35rem; margin-bottom: 0.6rem; }
+h3 { font-size: 1.1rem;  margin-bottom: 0.5rem; }
+
+p, li { color: var(--text); }
+p { margin: 0.4rem 0 0.9rem 0; }
+
+a { color: var(--blue); }
+a:hover { color: var(--blue-bright); }
+
+hr {
+  border: none;
+  border-top: 1px solid var(--blue-soft);
+  margin: 1.5rem 0;
+}
+
+/* ---------- Forms -------------------------------------------------------- */
+label {
+  display: block;
+  color: var(--blue-deep);
+  font-weight: 700;
+  font-size: 0.95rem;
+  margin: 0.75rem 0 0.35rem 0;
+}
+
+select, input[type="text"], input[type="email"], textarea {
+  width: 100%;
+  background: #ffffff;
+  color: var(--text);
+  border: 1px solid var(--blue-soft);
+  border-radius: 10px;
+  padding: 0.65rem 0.85rem;
+  font-size: 1rem;
+  font-family: inherit;
+  outline: none;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+select:focus, input[type="text"]:focus, input[type="email"]:focus, textarea:focus {
+  border-color: var(--blue);
+  box-shadow: 0 0 0 3px rgba(63, 136, 200, 0.18);
+}
+input[type="text"][readonly],
+input[type="email"][readonly] {
+  background: var(--bg-card-2);
+  color: var(--text-mute);
+}
+
+/* ---------- Buttons ------------------------------------------------------ */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: linear-gradient(90deg, var(--blue), var(--blue-bright));
+  color: var(--text-on-blue);
+  border: none;
+  border-radius: 10px;
+  padding: 0.7rem 1.3rem;
+  font-size: 1rem;
+  font-weight: 700;
+  cursor: pointer;
+  box-shadow: 0 2px 8px var(--blue-glow);
+  transition: transform 0.15s ease, box-shadow 0.15s ease, background 0.15s ease;
+  font-family: inherit;
+}
+.btn:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 14px var(--blue-glow);
+}
+.btn:disabled { opacity: 0.55; cursor: not-allowed; transform: none; box-shadow: none; }
+
+.btn-secondary {
+  background: transparent;
+  color: var(--blue);
+  border: 1px solid var(--blue);
+  box-shadow: none;
+}
+.btn-secondary:hover:not(:disabled) {
+  background: var(--blue-tint);
+  box-shadow: 0 2px 8px rgba(63, 136, 200, 0.12);
+}
+
+.btn-row { display: flex; gap: 0.75rem; flex-wrap: wrap; margin-top: 0.5rem; }
+
+/* ---------- GPS panel --------------------------------------------------- */
+.gps-status {
+  margin-top: 0.75rem;
+  font-size: 0.95rem;
+  color: var(--text-mute);
+  min-height: 1.4em;
+}
+.gps-status.ok      { color: var(--success); }
+.gps-status.error   { color: var(--danger); }
+.gps-coords {
+  margin-top: 0.75rem;
+  font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  font-size: 1.05rem;
+  color: var(--blue-deep);
+  background: var(--blue-tint);
+  border: 1px solid var(--blue-soft);
+  padding: 0.6rem 0.85rem;
+  border-radius: 10px;
+  display: none;
+}
+
+#map {
+  width: 100%;
+  height: 360px;
+  margin-top: 1rem;
+  border-radius: var(--radius);
+  border: 1px solid var(--blue-soft);
+  background: #ffffff;
+}
+
+/* Save form */
+.save-form { margin-top: 1rem; display: none; }
+.save-form .row { display: flex; gap: 0.6rem; align-items: stretch; }
+.save-form input[type="text"] { flex: 1; }
+.save-toast {
+  margin-top: 0.6rem;
+  font-size: 0.9rem;
+  color: var(--success);
+  min-height: 1.2em;
+}
+
+/* ---------- Predictor form grid ----------------------------------------- */
+.predictor-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 1rem;
+  margin-top: 0.5rem;
+}
+
+/* Read-only auto-inferred geology display */
+.inferred-display {
+  background: var(--blue-tint);
+  border: 1px solid var(--blue-soft);
+  border-radius: 10px;
+  padding: 0.75rem 0.95rem;
+  margin-top: 0.4rem;
+}
+.inferred-display .ind-label {
+  display: block;
+  font-size: 0.78rem;
+  color: var(--text-mute);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 0.2rem;
+}
+.inferred-display .ind-value {
+  font-weight: 700;
+  color: var(--blue-deep);
+  font-size: 1.05rem;
+}
+.inferred-display .ind-source {
+  display: block;
+  font-size: 0.8rem;
+  color: var(--text-mute);
+  margin-top: 0.25rem;
+  font-style: italic;
+}
+
+/* ---------- Prediction result panel ------------------------------------ */
+.result {
+  margin-top: 1.25rem;
+  padding: 1.25rem;
+  border-radius: var(--radius);
+  border: 1px solid var(--blue-soft);
+  display: none;
+}
+.result.high {
+  background: rgba(58, 139, 84, 0.08);
+  border-color: rgba(58, 139, 84, 0.32);
+}
+.result.low {
+  background: rgba(185, 74, 72, 0.06);
+  border-color: rgba(185, 74, 72, 0.30);
+}
+.result h3 { margin-bottom: 0.75rem; }
+.result.high h3 { color: var(--success); }
+.result.low  h3 { color: var(--danger); }
+
+.metrics {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+  margin-top: 0.5rem;
+}
+.metric {
+  background: var(--bg-card-2);
+  border: 1px solid var(--blue-soft);
+  border-radius: var(--radius);
+  padding: 0.9rem 1rem;
+}
+.metric .label { color: var(--text-mute); font-size: 0.85rem; font-weight: 600; }
+.metric .value { color: var(--blue-deep); font-size: 1.55rem; font-weight: 800; margin-top: 0.25rem; }
+
+/* ---------- Feature Guide ---------------------------------------------- */
+.feature-block { margin-bottom: 1.25rem; }
+.feature-block h3 { margin-bottom: 0.35rem; }
+.feature-values {
+  display: flex; flex-wrap: wrap; gap: 0.4rem;
+  margin-top: 0.4rem;
+}
+.feature-values .pill {
+  font-size: 0.85rem;
+  padding: 0.25rem 0.6rem;
+  background: var(--blue-tint);
+  border: 1px solid var(--blue-soft);
+  border-radius: 999px;
+  color: var(--text-mute);
+}
+
+/* ---------- Misc -------------------------------------------------------- */
+.muted { color: var(--text-mute); }
+.lead  { font-size: 1.05rem; color: var(--text-mute); }
+
+.alert {
+  padding: 0.75rem 1rem;
+  border-radius: 10px;
+  border: 1px solid;
+  margin: 0.5rem 0 1rem 0;
+}
+.alert.error { color: var(--danger); border-color: rgba(185, 74, 72, 0.35); background: rgba(185, 74, 72, 0.06); }
+.alert.info  { color: var(--text-mute); border-color: var(--blue-soft); background: var(--blue-tint); }
+.alert.note  { color: var(--blue-deep); border-color: var(--blue-soft); background: var(--blue-tint); }
+
+/* ---------- App-wide footer with attribution -------------------------- */
+.app-footer {
+  margin: 2.5rem 0 0;
+  padding: 1rem 0 0;
+  border-top: 1px solid var(--blue-soft);
+  text-align: center;
+  color: var(--text-mute);
+  font-size: 0.85rem;
+  line-height: 1.6;
+}
+.app-footer a { color: var(--blue); text-decoration: none; }
+.app-footer a:hover { text-decoration: underline; }
+
+/* ---------- Responsive ------------------------------------------------- */
+@media (max-width: 760px) {
+  .layout { grid-template-columns: 1fr; }
+  .sidebar { position: static; height: auto; }
+  .sidebar nav { flex-direction: row; flex-wrap: wrap; }
+  .main { padding: 1.25rem 1.25rem 3rem 1.25rem; }
+  #map, #shapefile-map { height: 300px; }
+  .metrics { grid-template-columns: 1fr; }
+}
+
+/* Leaflet links — match palette */
+.leaflet-container a { color: var(--blue) !important; }
+
+/* ============================================================================
+   Saved Locations + Site Survey flow
+   ============================================================================ */
+
+/* Readiness checklist */
+.readiness {
+  list-style: none;
+  padding: 0;
+  margin: 1rem 0;
+}
+.readiness li {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  padding: 0.4rem 0;
+  color: var(--text-mute);
+  font-size: 0.95rem;
+}
+.readiness .dot {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: #d6dde4;
+  border: 1px solid var(--blue-soft);
+  flex-shrink: 0;
+}
+.readiness li.done {
+  color: var(--success);
+}
+.readiness li.done .dot {
+  background: var(--success);
+  border-color: var(--success);
+  box-shadow: 0 0 6px rgba(58, 139, 84, 0.5);
+}
+
+/* Saved Locations table */
+.saved-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.95rem;
+}
+.saved-table th,
+.saved-table td {
+  text-align: left;
+  padding: 0.7rem 0.6rem;
+  border-bottom: 1px solid var(--blue-soft);
+}
+.saved-table th {
+  color: var(--blue-deep);
+  font-weight: 700;
+  font-size: 0.85rem;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  background: var(--blue-tint);
+}
+.saved-table tbody tr:hover {
+  background: rgba(63, 136, 200, 0.04);
+}
+.saved-table .mono {
+  font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  color: var(--text-mute);
+  font-size: 0.88rem;
+}
+.row-actions {
+  display: flex;
+  gap: 0.4rem;
+  flex-wrap: wrap;
+}
+
+.pill-good {
+  color: var(--success);
+  background: rgba(58, 139, 84, 0.10);
+  border-color: rgba(58, 139, 84, 0.40);
+}
+.pill-bad {
+  color: var(--danger);
+  background: rgba(185, 74, 72, 0.08);
+  border-color: rgba(185, 74, 72, 0.35);
+}
+
+/* Button variants */
+.btn-sm {
+  padding: 0.4rem 0.75rem;
+  font-size: 0.85rem;
+  border-radius: 8px;
+}
+.btn-danger {
+  background: transparent;
+  color: var(--danger);
+  border: 1px solid rgba(185, 74, 72, 0.45);
+  box-shadow: none;
+}
+.btn-danger:hover:not(:disabled) {
+  background: rgba(185, 74, 72, 0.06);
+  box-shadow: 0 0 8px rgba(185, 74, 72, 0.18);
+}
+
+/* ---------- Modal ------------------------------------------------------ */
+.modal-backdrop {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(31, 42, 53, 0.55);
+  backdrop-filter: blur(3px);
+  z-index: 1000;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+}
+.modal-backdrop.open {
+  display: flex;
+}
+.modal-card {
+  background: var(--bg-card);
+  border: 1px solid var(--blue);
+  border-radius: var(--radius-lg);
+  padding: 1.75rem;
+  max-width: 460px;
+  width: 100%;
+  box-shadow: 0 8px 32px rgba(31, 79, 122, 0.25);
+}
+.modal-card h3 { margin-top: 0; }
+.modal-card input[type="date"] {
+  width: 100%;
+  background: #ffffff;
+  color: var(--text);
+  border: 1px solid var(--blue-soft);
+  border-radius: 10px;
+  padding: 0.65rem 0.85rem;
+  font-size: 1rem;
+  font-family: inherit;
+  margin-bottom: 0.5rem;
+}
+
+/* ============================================================================
+   Checklists, dropdown rows, TCS bars, key/value tables.
+   ============================================================================ */
+
+/* Checklists */
+.checklist {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 0.4rem;
+  margin-top: 0.6rem;
+}
+.checklist-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.6rem;
+  padding: 0.55rem 0.75rem;
+  background: var(--blue-tint);
+  border: 1px solid var(--blue-soft);
+  border-radius: 10px;
+  color: var(--text);
+  font-weight: normal;
+  font-size: 0.92rem;
+  cursor: pointer;
+  transition: background 0.15s ease, border-color 0.15s ease;
+}
+.checklist-item:hover {
+  background: rgba(63, 136, 200, 0.10);
+}
+.checklist-item input[type="checkbox"] {
+  width: auto;
+  margin: 0.2rem 0 0 0;
+  flex-shrink: 0;
+}
+.checklist-item.lups-bad  { border-left: 3px solid var(--danger); }
+.checklist-item.lups-good { border-left: 3px solid var(--success); }
+.checklist-item .lups-weight {
+  margin-left: auto;
+  font-style: normal;
+  font-weight: 700;
+  font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  color: var(--blue-deep);
+  font-size: 0.85rem;
+}
+
+/* Dropdown row grid */
+.dropdown-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 0.85rem;
+  margin-top: 0.5rem;
+}
+
+/* Inline mono span */
+.mono {
+  font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  color: var(--blue-deep);
+}
+
+/* Pills */
+.pill {
+  display: inline-block;
+  font-size: 0.78rem;
+  padding: 0.15rem 0.55rem;
+  background: var(--blue-tint);
+  border: 1px solid var(--blue-soft);
+  border-radius: 999px;
+  color: var(--text-mute);
+}
+
+/* KV table */
+.kv {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.94rem;
+  margin: 0.4rem 0;
+}
+.kv td {
+  padding: 0.35rem 0.85rem 0.35rem 0;
+  vertical-align: top;
+}
+.kv td:first-child {
+  color: var(--text-mute);
+  width: 35%;
+  min-width: 9rem;
+}
+.kv-tight td { padding: 0.25rem 0.6rem 0.25rem 0; }
+
+/* TCS confidence breakdown */
+.tcs-table {
+  display: grid;
+  gap: 0.6rem;
+  margin: 0.5rem 0;
+}
+.tcs-row {
+  display: grid;
+  grid-template-columns: 1fr 100px 60px;
+  grid-template-areas:
+    "label bar score"
+    "explain explain explain";
+  gap: 0.25rem 0.75rem;
+  align-items: center;
+}
+.tcs-label   { grid-area: label;  font-weight: 600; color: var(--blue-deep); font-size: 0.92rem; }
+.tcs-bar     { grid-area: bar; height: 8px; background: rgba(63,136,200,0.15); border-radius: 4px; overflow: hidden; }
+.tcs-bar-fill { height: 100%; background: linear-gradient(90deg, var(--blue), var(--blue-bright)); transition: width 0.3s ease; }
+.tcs-score   { grid-area: score; font-family: ui-monospace, monospace; color: var(--blue-deep); text-align: right; font-weight: 700; }
+.tcs-explain { grid-area: explain; font-size: 0.85rem; }
+
+/* Result detail panel margin */
+#result-detail .card { margin-bottom: 0; }
+
+/* Saved table extras */
+.saved-table .tcs-cell      { font-family: ui-monospace, monospace; color: var(--blue-deep); }
+.saved-table .review-flag   { color: var(--warning); font-weight: 700; }
+
+/* Expert review page (calmer warm tone) */
+.review-card {
+  border: 1px solid rgba(201, 138, 46, 0.30);
+  background: rgba(201, 138, 46, 0.04);
+  border-radius: var(--radius);
+  padding: 1.25rem;
+  margin-bottom: 1rem;
+}
+.review-reasons {
+  margin: 0.4rem 0 0.6rem 1.2rem;
+  color: var(--text-mute);
+  font-size: 0.9rem;
+}
+
+/* ---------- Subtle BGS-disagreement note ------------------------------ */
+/* When the BGS regional baseline disagrees with the model, we explicitly
+   do NOT use a red alert. Show a calm informational note instead. */
+.bgs-note {
+  margin: 0.5rem 0 0;
+  padding: 0.75rem 1rem;
+  border-left: 3px solid var(--blue-bright);
+  background: var(--blue-tint);
+  border-radius: 8px;
+  color: var(--text);
+  font-size: 0.92rem;
+}
+.bgs-note strong { color: var(--blue-deep); }
+
+/* ---------- Shapefile map on Model Info page -------------------------- */
+#shapefile-map {
+  width: 100%;
+  height: 460px;
+  margin-top: 1rem;
+  border-radius: var(--radius);
+  border: 1px solid var(--blue-soft);
+  background: #ffffff;
+}
+.legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+  margin-top: 0.75rem;
+}
+.legend-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.85rem;
+  color: var(--text-mute);
+}
+.legend-swatch {
+  width: 14px;
+  height: 14px;
+  border-radius: 3px;
+  border: 1px solid rgba(0, 0, 0, 0.15);
+  flex-shrink: 0;
+}
